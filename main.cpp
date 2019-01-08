@@ -21,6 +21,5 @@ int main(int argc, char *argv[])
     //w.show();
     w.showMaximized();//窗口最大化
     w.Init();
-    //w.show();
     return a.exec();
 }

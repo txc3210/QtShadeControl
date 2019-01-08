@@ -31,14 +31,7 @@ void ComThread::run()
     {
         qDebug() << __func__ << ":QList<Controller *> is empty, thread can not run";
         return;
-    }
-    /*
-    QList<Controller*> list;
-    for(unsigned char addr = 1; addr <= 43; ++addr)
-    {
-        Controller *dev = new Controller(port, addr);
-        list.push_back(dev);
-    }*/
+    }    
     //QObject::connect(this, SIGNAL(updateDataSignal(int)), parent, SLOT(updateDataSlot(int)));
     while(true)
     {
