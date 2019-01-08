@@ -7,6 +7,8 @@
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += serialport
+QT += sql
 
 TARGET = QtShadeControl
 TEMPLATE = app
@@ -26,10 +28,18 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    comthread.cpp \
+    controller.cpp \
+    mdichild.cpp \
+    viewchild.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    comthread.h \
+    controller.h \
+    mdichild.h \
+    viewchild.h
 
 FORMS += \
         mainwindow.ui
