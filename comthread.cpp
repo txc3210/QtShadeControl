@@ -1,3 +1,8 @@
+/**************************************
+// Programmed by taoxiaochao
+ * ********************************/
+
+
 #include "comthread.h"
 #include "controller.h"
 #include <QDebug>
