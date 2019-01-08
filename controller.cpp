@@ -49,7 +49,6 @@ unsigned short Controller::crc_16b(unsigned char *pBuf, unsigned short len)
                 uCRC = (uCRC >> 1);
         }
     }
-    //uCRC = (uCRC >> 8) | (uCRC << 8);
     return uCRC;
 }
 
