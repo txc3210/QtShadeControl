@@ -8,7 +8,7 @@
 #include <chrono>
 #include <ctime>
 #include <QDebug>
-
+#include <QString>
 
 Controller::Controller(QSerialPort *port, unsigned char addr)
 {
@@ -24,7 +24,13 @@ Controller::~Controller() {
 
 };
 
-std::string get_current_time()
+
+/**********************************************************************
+ * Function: Get current time string
+ * Param: None
+ * Return: Current time string
+ * *********************************************************************/
+QString get_current_time()
 {
     char str[20];
     using std::chrono::system_clock;
@@ -32,7 +38,7 @@ std::string get_current_time()
     struct std::tm tms;
     localtime_s(&tms, &tt);
     strftime(str, sizeof(str), "%Y-%m-%d %H:%M:%S", &tms);
-    return std::string(str);
+    return QString(str);
 }
 
 /**************************************************************************
@@ -169,6 +175,7 @@ int Controller::get_angle()
         qDebug() << __func__ << ": Serial port write failed.";
         return -2;
     }
+    qDebug() << __func__ << ": Serial port send" << num <<" bytes.";
     QThread::msleep(RS485_WAIT_TIME);
     timestamp = get_current_time();
     //std::this_thread::sleep_for(std::chrono::milliseconds(RS485_WAIT_TIME));

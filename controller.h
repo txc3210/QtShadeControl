@@ -49,7 +49,7 @@ public:
     unsigned char pos;//楼层安装位置，取值0-3，0为西面，1为南面-1
     unsigned char enable;//使能标志，0为禁止使用，1为可以使用
     std::string name; //百叶名称
-    std::string timestamp;//数据更新时间
+    QString timestamp;//数据更新时间
 private:
     QSerialPort *port;//通讯串口
     unsigned short max_angle_time; //从0到90度时电机动作时间
