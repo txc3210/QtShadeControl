@@ -35,6 +35,12 @@ std::string get_current_time()
     return std::string(str);
 }
 
+/**************************************************************************
+ * Function: Calculate CRC16 for the bytes
+ * Param: Buffer of the bytes
+ * Param len: Count of the bytes
+ * Return: The CRC16 result
+ * ***********************************************************************/
 unsigned short Controller::crc_16b(unsigned char *pBuf, unsigned short len)
 {
     unsigned short uCRC = 0xFFFF;
