@@ -1,3 +1,7 @@
+/****************************************************************************
+ * **Copyright GDJYK Ltd. All rights reserved
+ * Write by Tao Xiachao in 2019
+***************************************************************************/
 #include <QThread>
 #include "controller.h"
 #include <thread>
