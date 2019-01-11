@@ -8,21 +8,11 @@
 #include <QDebug>
 #include <QObject>
 
-/*
-ComThread::ComThread(QSerialPort *port, QWidget * parent)
-{
-    this->port = port;
-    this->parent = parent;
-}
-*/
-
 ComThread::ComThread(QSerialPort *port, QList<Controller*> *list, QWidget * parent)
 {
     this->port = port;
     this->parent = parent;
     this->list = list;
-
-
 }
 
 void ComThread::run()
@@ -37,14 +27,16 @@ void ComThread::run()
         qDebug() << __func__ << ":QList<Controller *> is empty, thread can not run";
         return;
     }    
-    //QObject::connect(this, SIGNAL(updateDataSignal(int)), parent, SLOT(updateDataSlot(int)));
+
+    int index = 0;
     while(true)
     {
-        foreach (auto dev, *list) {
-            dev->get_angle();
+        index = 0;
+        foreach (auto dev, *list) {            
+            dev->synchroize(); //读取控制器数据
             msleep(1800);
-           // emit updateDataSignal(dev->addr);
-            emit updateDataSignal(1);
+            //发射信号，告诉列表视图当前读取的是哪一行设备的数据，以便对方更新表格数据
+            emit updateInfoSignal(index++);
         }
     }
 }

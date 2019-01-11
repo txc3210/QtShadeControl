@@ -32,14 +32,16 @@ SOURCES += \
     comthread.cpp \
     controller.cpp \
     mdichild.cpp \
-    viewchild.cpp
+    viewchild.cpp \
+    listchild.cpp
 
 HEADERS += \
         mainwindow.h \
     comthread.h \
     controller.h \
     mdichild.h \
-    viewchild.h
+    viewchild.h \
+    listchild.h
 
 FORMS += \
         mainwindow.ui

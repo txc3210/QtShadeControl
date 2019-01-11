@@ -124,7 +124,7 @@ void MdiChild::loadFromDatabase()
     }
     query.clear();
     db.close();
-    tableWidget->setSpan(0, 4, 2, 2);
+//    tableWidget->setSpan(0, 4, 2, 2);
     QTableWidgetItem *item = new QTableWidgetItem(tr("室内光照度"));
     item->setTextAlignment(Qt::AlignCenter);
     item->setBackgroundColor(QColor(255, 255, 255));

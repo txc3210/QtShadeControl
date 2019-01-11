@@ -12,10 +12,11 @@ public:
 //    ComThread(QSerialPort *port, QWidget * parent);
     ComThread(QSerialPort *port, QList<Controller*> *list, QWidget * parent);
 
+
 protected:
     void run();
 signals:
-    void updateDataSignal(int addr);
+    void updateInfoSignal(int index);
 private:
     QSerialPort *port;//通讯串口
     QWidget *parent;

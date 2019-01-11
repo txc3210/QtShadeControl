@@ -3,33 +3,39 @@
 #include <QtWidgets>
 #include <comthread.h>
 #include <QtSerialPort/QSerialPort>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    listChild = nullptr;
     //ui->setupUi(this);
     mdiArea = new QMdiArea(this);
     mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     mdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setCentralWidget(mdiArea);
     //setContentsMargins(0,0,0,0);
-    child = new MdiChild;
-    mdiArea->addSubWindow(child);
+//    child = new MdiChild;
+//    mdiArea->addSubWindow(child);
 
-    view = new ViewChild;
-    mdiArea->addSubWindow(view);
-    view->show();
+ //   view = new ViewChild;
+//    mdiArea->addSubWindow(view);
+ //   view->show();
 }
 
 MainWindow::~MainWindow()
 {    
     delete ui;
-    if(!list.isEmpty())
+    if(!listController.isEmpty())
     {
-        foreach (auto controller, list) {
+        //将动态创建的Controller对象全部释放
+        foreach (auto controller, listController) {
             delete controller;
         }
+        listController.clear(); //清空列表
     }
 }
 
@@ -58,39 +64,119 @@ void MainWindow::Init()
  //   connect(this, SIGNAL(sizeSignal()), this, SLOT(sizeSlot()));
   //  connect(this, SIGNAL(sizeSignal2()), this, SLOT(sizeSlot2()));
    // emit sizeSignal();
-    openSerialPort();
+    //openSerialPort();
 
 }
 
+/**************************************************
+ * Function: Get controller information form database
+ * Param list: Reference to the controller list
+ * Return: number of controller in dabatase if success, <0 if error;
+ * *************************************************/
+int MainWindow::loadControllerInfo(QList<Controller*> &list)
+{
+    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName(tr("192.168.90.200"));
+    db.setDatabaseName(tr("shade_control"));
+    db.setUserName(tr("root"));
+    db.setPassword(tr("jns12345"));
+    db.setPort(3306);
+    bool bRet = db.open();
 
-void MainWindow::openSerialPort()
+    if(!bRet)
+    {
+        qDebug() << __func__ << tr("Open mysql database failed");
+        QSqlError err = db.lastError();
+
+        QMessageBox::information(this, tr("提示"), tr("打开MySQL数据库失败:")+err.driverText() +tr(",") + err.databaseText(), QMessageBox::Ok);
+        return -1;
+    }
+    qDebug() << __func__  << tr("Open mysql database success");
+    QSqlQuery query(db);
+    bRet = query.exec(tr("select * from board order by id asc"));
+    if(!bRet)
+    {
+        QMessageBox::information(this, tr("提示"), tr("查询MySQL数据库失败"), QMessageBox::Ok);
+        return -2;
+    }
+    list.clear();//Clear Controller list
+    unsigned char addr = 0;
+
+    //从数据库中获取信息添加到列表中
+    while(query.next())
+    {
+        addr = static_cast<unsigned char>(query.value(4).toUInt());
+        Controller *dev = new Controller(port, addr);
+        dev->floor = static_cast<unsigned char>(query.value(1).toUInt());
+        dev->pos = static_cast<unsigned char>(query.value(2).toUInt());
+        dev->posNmae = query.value(3).toString();
+        dev->mode = static_cast<unsigned char>(query.value(5).toUInt());
+        dev->angle = static_cast<unsigned char>(query.value(6).toUInt());
+        dev->enable = static_cast<unsigned char>(query.value(7).toUInt());
+        list.push_back(dev);        
+    }
+    query.clear();
+    db.close();
+    qDebug() << __func__ << tr("Close database");
+    return list.size(); // Return the number of controller
+}
+
+/****************************************************
+ * Function: Open serial port
+ * Param portName: serial port name like "COM2"
+ * Return: true for successful, or false for failed;
+ * **************************************************/
+bool MainWindow::openSerialPort(QString portName)
 {
     port = new QSerialPort();
-    port->setPortName(tr("COM2"));
+    port->setPortName(portName);
     if(!port->open(QIODevice::ReadWrite))
-    {
+    {        
         QMessageBox::information(this, tr("提示"),
                                  tr("打开串口失败，请检查串口是否被占用"),
                                  QMessageBox::Ok);
-        return;
+        return false;
     }
     qDebug() << (tr("打开串口成功"));
-    port->setBaudRate(QSerialPort::Baud9600);
-     //port.setBaudRate(ui->comBaud->currentText().toInt());
+    port->setBaudRate(QSerialPort::Baud9600);    
     port->setDataBits(QSerialPort::Data8);
     port->setParity(QSerialPort::NoParity);
     port->setStopBits(QSerialPort::OneStop);
     port->setFlowControl(QSerialPort::NoFlowControl);
+    return true;
+}
 
+void MainWindow::createChild(QList<Controller *> & list)
+{
+    listChild = new ListChild(this, &list);
+    mdiArea->addSubWindow(listChild);
+    listChild->show();//显示表格视图
+}
 
-    for(unsigned char addr = 1; addr <= 43; ++addr)
+void MainWindow::start()
+{
+    if(!openSerialPort(tr("COM2")))
+        return;
+    int num = loadControllerInfo(listController);
+    if(num < 0)
+        return;
+    else if(num == 0)
     {
-        Controller *dev = new Controller(port, addr);
-        list.push_back(dev);
+        QMessageBox::information(this, tr("提示"),
+                                 tr("数据库中没有控制器信息，请先添加控制器"),
+                                 QMessageBox::Ok);
+        exit(0);
     }
 
-    ComThread *th = new ComThread(port, &list, this);
- //   connect(th, SIGNAL(updateDataSignal(int)), this, SLOT(updateDataSlot(int)));
+    createActions();
+    createChild(listController);
+
+
+
+    //启动多线程与控制器通讯
+    ComThread *th = new ComThread(port, &listController, this);
+    port->moveToThread(th);
+    connect(th, SIGNAL(updateInfoSignal(int)), listChild, SLOT(updateInfoSlot(int)));
     th->start();
 }
 
@@ -129,8 +215,12 @@ void MainWindow::resizeEvent(QResizeEvent* size)
  //   qDebug() << QString("resizeEvent, size=") << size;
     //mdiArea->resize(frameGeometry().size());
     mdiArea->showMaximized();
-    child->showMaximized();
-    view->showMaximized();
+    if(listChild != nullptr)
+        listChild->showMaximized();
+
+       // child->showMaximized();
+
+       // view->showMaximized();
    // mdiArea->resize(size->size());
     //child->resize(frameGeometry().size());
 }

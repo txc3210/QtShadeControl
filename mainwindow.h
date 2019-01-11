@@ -6,6 +6,7 @@
 #include <QResizeEvent>
 #include "mdichild.h"
 #include "viewchild.h"
+#include "listchild.h"
 #include <QtSerialPort/QSerialPort>
 #include <controller.h>
 
@@ -21,7 +22,9 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void Init();
-    void openSerialPort();
+    bool openSerialPort(QString portName);
+    int loadControllerInfo(QList<Controller*> &list);
+    void start();
 
 private:
     Ui::MainWindow *ui;
@@ -32,11 +35,13 @@ private:
     void resizeEvent(QResizeEvent* size);
     MdiChild *child;
     ViewChild *view;
+    ListChild *listChild;
 
 private:
   //  Ui::MainWindow *ui;
     QSerialPort *port;
-    QList<Controller*> list;
+    QList<Controller*> listController;
+    void createChild(QList<Controller *> &list);
 private slots:
    // void sizeSlot();
    // void sizeSlot2();
