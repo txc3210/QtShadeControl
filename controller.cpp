@@ -199,6 +199,7 @@ int Controller::get_angle()
     }
     qDebug() << __func__ << ": Serial port send" << num <<" bytes.";
 
+    timestamp = get_current_time();
     if(port->waitForReadyRead(RS485_READ_TIMEOUT))
     {
         qDebug() << __func__ << ": Serial port received some data";
@@ -206,10 +207,10 @@ int Controller::get_angle()
     {
         qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
         port->clearError();
+        state = RS485_NO_REPLY;
         return -3;
     }
     QThread::msleep(RS485_WAIT_TIME); //等待数据接收完成
-    timestamp = get_current_time();
     QByteArray array = port->readAll(); //读取缓冲区内所有数据
     if (array.isEmpty())
     {
@@ -337,6 +338,7 @@ int Controller::get_mode()
         return -2;
     }
     qDebug() << __func__ << ": Serial port send" << num <<" bytes.";
+    timestamp = get_current_time();
 
     if(port->waitForReadyRead(RS485_READ_TIMEOUT))
     {
@@ -345,6 +347,7 @@ int Controller::get_mode()
     {
         qDebug() << __func__ << ": Serial port receive timeout. err= " << port->errorString();
         port->clearError();
+        state = RS485_NO_REPLY;
         return -3;
     }
     QThread::msleep(RS485_WAIT_TIME);
