@@ -3,9 +3,9 @@
 #include <QtSerialPort/QSerialPort>
 
 
-#define RS485_WAIT_TIME		300 //RS485通讯等待时间，单位 ms
+#define RS485_WAIT_TIME		100 //RS485通讯等待时间，单位 ms
 #define RS485_WRITE_TIMEOUT     1000 //RS485写数据超时时间，单位ms
-#define RS485_READ_TIMEOUT      1000 //RS485读数据超时时间，单位ms
+#define RS485_READ_TIMEOUT      2000 //RS485读数据超时时间，单位ms
 
 #define MAX_ANGLE_TIME		680.0f //百叶90度时对应的电机时间
 #define MIN_ANGLE_TIME		680.0F //百叶90度时对应的电机时间
@@ -52,16 +52,21 @@ public:
     unsigned char addr; //RS485地址
     unsigned char mode; //运行模式
     unsigned char angle; //角度，取值0-90
+    QString angleDesc; //角度描述，通讯正常时为角度，异常时为未知
     unsigned char floor; //所在楼层号，取值3-13
     unsigned char pos;//楼层安装位置，取值0-3，0为西面，1为南面-1
     QString posNmae;//安装位置字符串表达方式
     unsigned char enable;//使能标志，0为禁止使用，1为可以使用
     QString name; //百叶名称
     QString timestamp;//数据更新时间
+
+    QString getAngleDesc();//获取角度描述
+    QString getModeDesc();
 private:
     QSerialPort *port;//通讯串口
     unsigned short max_angle_time; //从0到90度时电机动作时间
     unsigned short min_angle_time; //从90到0度时电机动作时间
+
 };
 
 #endif // CONTROLLER_H

@@ -5,6 +5,7 @@
 #include <QPixmap>
 #include <QBitmap>
 #include <QPicture>
+#include <QPaintEvent>
 
 
 ViewChild::ViewChild()
@@ -16,7 +17,6 @@ ViewChild::ViewChild()
 void ViewChild::paintEvent(QPaintEvent * event)
 {
   //  Q_UNUSED(event);
-
 
 
     QPainter painter(this);

@@ -11,6 +11,7 @@ class ListChild : public QWidget
 public:
     explicit ListChild(QWidget *parent = nullptr);
     ListChild(QWidget *parent, QList<Controller *>* list);
+    void paintEvent(QPaintEvent* event);
 
 signals:
 

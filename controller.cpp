@@ -125,6 +125,7 @@ int Controller::set_angle(unsigned char angle)
         return -2;
     }
     qDebug() << __func__ << ": Serial port send" << num <<" bytes.";
+    timestamp = get_current_time();
     if (addr == 0) //广播地址发送数据时没有返回
         return 0;
     //等待接收返回数据
@@ -136,10 +137,10 @@ int Controller::set_angle(unsigned char angle)
     {
         qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
         port->clearError();
+        state = RS485_NO_REPLY;
         return -3;
     }
     QThread::msleep(RS485_WAIT_TIME); //等待数据全部接收完成
-    timestamp = get_current_time();
     QByteArray array = port->readAll();
     if (array.isEmpty())
     {
@@ -276,6 +277,7 @@ int Controller::set_mode(unsigned char mode)
         return -2;
     }
     qDebug() << __func__ << ": Serial port send" << num <<" bytes.";
+    timestamp = get_current_time();
     if (addr == 0) //向广播地址发送数据时没有返回
         return 0;
 
@@ -286,10 +288,10 @@ int Controller::set_mode(unsigned char mode)
     {
         qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
         port->clearError();
+        state = RS485_NO_REPLY;
         return -3;
     }
     QThread::msleep(RS485_WAIT_TIME);
-    timestamp = get_current_time();
 
     QByteArray  array = port->readAll();
     if(array.isEmpty())
@@ -409,4 +411,17 @@ int Controller::flush(unsigned char mode, unsigned char angle)
     if (ret != 0)
         return -2;
     return 0;
+}
+
+QString Controller::getAngleDesc()
+{
+    return (state == RS485_OK ? QString().sprintf("%d", angle) : QString("未知"));
+}
+
+QString Controller::getModeDesc()
+{
+    if(state == RS485_OK)
+        return (mode == MODE_AUTO ? QString("自动") : QString("手动"));
+    else
+        return QString("未知");
 }

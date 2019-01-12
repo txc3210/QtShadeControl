@@ -17,13 +17,6 @@ MainWindow::MainWindow(QWidget *parent) :
     mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     mdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setCentralWidget(mdiArea);
-    //setContentsMargins(0,0,0,0);
-//    child = new MdiChild;
-//    mdiArea->addSubWindow(child);
-
- //   view = new ViewChild;
-//    mdiArea->addSubWindow(view);
- //   view->show();
 }
 
 MainWindow::~MainWindow()
@@ -39,34 +32,6 @@ MainWindow::~MainWindow()
     }
 }
 
-
-void MainWindow::Init()
-{
-
-
-    //MdiChild *child = createMdiChild();
-    //child->newFile();
-    child->show();
-//child->showMaximized();
-//child->showMaximized();
-    //child->setSi
-    //child->resize(geometry().width(), geometry().height());
-    //child->setGeometry(geometry());
-    //showMaximized();
-    //showFullScreen();
-    //child->setWindowFlag(Qt::Window);
-     //
-    //setFixedSize(width(), height());
-    setWindowTitle(tr("智能遮阳百叶控制系统"));
-    createActions();
-    //child->move(mdiArea->x(), mdiArea->y());
-
- //   connect(this, SIGNAL(sizeSignal()), this, SLOT(sizeSlot()));
-  //  connect(this, SIGNAL(sizeSignal2()), this, SLOT(sizeSlot2()));
-   // emit sizeSignal();
-    //openSerialPort();
-
-}
 
 /**************************************************
  * Function: Get controller information form database
@@ -212,17 +177,9 @@ void MainWindow::createActions()
 
 void MainWindow::resizeEvent(QResizeEvent* size)
 {
- //   qDebug() << QString("resizeEvent, size=") << size;
-    //mdiArea->resize(frameGeometry().size());
     mdiArea->showMaximized();
     if(listChild != nullptr)
         listChild->showMaximized();
-
-       // child->showMaximized();
-
-       // view->showMaximized();
-   // mdiArea->resize(size->size());
-    //child->resize(frameGeometry().size());
 }
 
 void MainWindow::showTable()
