@@ -12,12 +12,12 @@
 
 ListChild::ListChild(QWidget *parent)
 {
-
+    Q_UNUSED(parent);
 }
 
 ListChild::ListChild(QWidget *parent, QList<Controller *>* list)   
 {
-
+    Q_UNUSED(parent);
     this->list = list;
     tableInit();//创建表格
     QVBoxLayout *layout = new  QVBoxLayout;
@@ -129,6 +129,7 @@ void ListChild::updateInfoSlot(int index)
 
 void ListChild::paintEvent(QPaintEvent* event)
 {
+    Q_UNUSED(event);
     QPainter painter(this);
     painter.setPen(Qt::NoPen);
     painter.setBrush(QColor(220, 148, 243));

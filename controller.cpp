@@ -128,35 +128,28 @@ int Controller::set_angle(unsigned char angle)
     timestamp = get_current_time();
     if (addr == 0) //广播地址发送数据时没有返回
         return 0;
-    //等待接收返回数据
-    if(port->waitForReadyRead(RS485_READ_TIMEOUT))
+    //循环等待接收返回数据，数据可能会分几次到达
+    QByteArray recvBytes;
+    while (recvBytes.size() < 6)
     {
-        //有数据到达了串口，但不代表所有数据到达
-        qDebug() << __func__ << ": Serial port received some data";
-    }else
-    {
-        qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
-        port->clearError();
-        state = RS485_NO_REPLY;
-        return -3;
-    }
-    QThread::msleep(RS485_WAIT_TIME); //等待数据全部接收完成
-    QByteArray array = port->readAll();
-    if (array.isEmpty())
-    {
-        qDebug() << __func__ << ": Serial port recv 0 bytes.";
-        state = RS485_NO_REPLY;
-        return -4;
-    }
-    else if (array.size() != 6)
-    {
-        qDebug() << __func__ << ": Serial port does not recv enough bytes.";
-        return -5;
+        if(port->waitForReadyRead(RS485_READ_TIMEOUT))
+        {
+            //有数据到达了串口，但不代表所有数据到达
+            qDebug() << __func__ << ": Serial port received some data";
+        }else
+        {
+            qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
+            port->clearError();
+            state = RS485_NO_REPLY;
+            return -3;
+        }
+        QByteArray array = port->readAll();
+        recvBytes.append(array);
     }
 
-    unsigned char *recv_buf = reinterpret_cast<unsigned char *>(array.data());
+    unsigned char *recv_buf = reinterpret_cast<unsigned char *>(recvBytes.data());
     if (recv_buf[0] != addr || recv_buf[1] != 0x06)
-        return -6;
+        return -4;
     state = RS485_OK;
     return 0;
 }
@@ -201,40 +194,36 @@ int Controller::get_angle()
     qDebug() << __func__ << ": Serial port send" << num <<" bytes.";
 
     timestamp = get_current_time();
-    if(port->waitForReadyRead(RS485_READ_TIMEOUT))
+
+    QByteArray recvBytes;
+    //循环接收数据，直至超时或接收到完整数据
+    while (recvBytes.size() < 6)
     {
-        qDebug() << __func__ << ": Serial port received some data";
-    }else
-    {
-        qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
-        port->clearError();
-        state = RS485_NO_REPLY;
-        return -3;
+        if(port->waitForReadyRead(RS485_READ_TIMEOUT))
+        {
+            qDebug() << __func__ << ": Serial port received some data";
+        }else
+        {
+            qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
+            port->clearError();
+            state = RS485_NO_REPLY;
+            return -3;
+        }
+        QByteArray array = port->readAll(); //读取缓冲区内所有数据
+        recvBytes.append(array);
     }
-    QThread::msleep(RS485_WAIT_TIME); //等待数据接收完成
-    QByteArray array = port->readAll(); //读取缓冲区内所有数据
-    if (array.isEmpty())
-    {
-        qDebug() << __func__ << ": Serial port recv 0 bytes.";
-        state = RS485_NO_REPLY;
-        return -4;
-    }
-    else if (array.size() != 6)
-    {
-        qDebug() << __func__ << ": Serial port does not recv enough bytes.";
-        return -5;
-    }
-    unsigned char *recv_buf = reinterpret_cast<unsigned char *>(array.data());
+
+    unsigned char *recv_buf = reinterpret_cast<unsigned char *>(recvBytes.data());
     if (recv_buf[0] != addr || recv_buf[1] != 0x03)
     {
         qDebug() << __func__ << ": Serial port recv error.";
-        return -6;
+        return -4;
     } 
     crc = crc_16b(recv_buf, 4);
     if (crc != (recv_buf[4] + recv_buf[5] * 256))
     {
         qDebug() << __func__ << ": Serial port recv crc error.";
-        return -7;
+        return -5;
     }
 
     unsigned short time = recv_buf[2] * 256 + recv_buf[3];
@@ -281,28 +270,25 @@ int Controller::set_mode(unsigned char mode)
     if (addr == 0) //向广播地址发送数据时没有返回
         return 0;
 
-    if(port->waitForReadyRead(RS485_READ_TIMEOUT))
+    QByteArray recvBytes;
+    while(recvBytes.size() < 6)
     {
-        qDebug() << __func__ << ": Serial port received some data";
-    }else
-    {
-        qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
-        port->clearError();
-        state = RS485_NO_REPLY;
-        return -3;
+        if(port->waitForReadyRead(RS485_READ_TIMEOUT))
+        {
+            qDebug() << __func__ << ": Serial port received some data";
+        }else
+        {
+            qDebug() << __func__ << ": Serial port read timeout. err= " << port->errorString();
+            port->clearError();
+            state = RS485_NO_REPLY;
+            return -3;
+        }
+        QByteArray array = port->readAll();
+        recvBytes.append(array);
     }
-    QThread::msleep(RS485_WAIT_TIME);
-
-    QByteArray  array = port->readAll();
-    if(array.isEmpty())
-    {
-        state = RS485_NO_REPLY;
-        return -4;
-    }else if(array.size() != 6)
-        return -5;
-    unsigned char *recv_buf = reinterpret_cast<unsigned char *>(array.data());
+    unsigned char *recv_buf = reinterpret_cast<unsigned char *>(recvBytes.data());
     if (recv_buf[0] != addr || recv_buf[1] != 0x06)
-        return -6;
+        return -4;
     state = RS485_OK;
     return 0;  
 }
@@ -342,36 +328,29 @@ int Controller::get_mode()
     qDebug() << __func__ << ": Serial port send" << num <<" bytes.";
     timestamp = get_current_time();
 
-    if(port->waitForReadyRead(RS485_READ_TIMEOUT))
+    QByteArray recvBytes;
+    while (recvBytes.size() < 6)
     {
-        qDebug() << __func__ << ": Serial port received some data";
-    }else
-    {
-        qDebug() << __func__ << ": Serial port receive timeout. err= " << port->errorString();
-        port->clearError();
-        state = RS485_NO_REPLY;
-        return -3;
-    }
-    QThread::msleep(RS485_WAIT_TIME);
-    QByteArray array = port->readAll();
-    if (array.isEmpty())
-    {
-        qDebug() << __func__ << ": Serial port recv 0 bytes.";
-        state = RS485_NO_REPLY;
-        return -4;
-    }
-    else if (array.size() != 6)
-    {
-        qDebug() << __func__ << ": Serial port does not recv enough bytes.";
-        return -5;
+        if(port->waitForReadyRead(RS485_READ_TIMEOUT))
+        {
+            qDebug() << __func__ << ": Serial port received some data";
+        }else
+        {
+            qDebug() << __func__ << ": Serial port receive timeout. err= " << port->errorString();
+            port->clearError();
+            state = RS485_NO_REPLY;
+            return -3;
+        }
+        QByteArray array = port->readAll();
+        recvBytes.append(array);
     }
 
-    unsigned char *recv_buf = reinterpret_cast<unsigned char*>(array.data());
+    unsigned char *recv_buf = reinterpret_cast<unsigned char*>(recvBytes.data());
     if (recv_buf[0] != addr || recv_buf[1] != 0x03)
-        return -6;
+        return -4;
     crc = crc_16b(recv_buf, 4);
     if (crc != (recv_buf[4] + recv_buf[5] * 256))
-        return -7;
+        return -5;
     mode = recv_buf[3];
     state = RS485_OK;
     return 0;

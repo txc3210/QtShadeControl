@@ -177,6 +177,7 @@ void MainWindow::createActions()
 
 void MainWindow::resizeEvent(QResizeEvent* size)
 {
+    Q_UNUSED(size);
     mdiArea->showMaximized();
     if(listChild != nullptr)
         listChild->showMaximized();
